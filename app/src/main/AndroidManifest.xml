@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.INTERACT_ACROSS_USERS_FULL"
+        tools:ignore="ProtectedPermissions" />
+
+    <permission
+        android:name="io.github.okiele.users.PERMISSION_SINGLE_USER"
+        android:protectionLevel="normal" />
+    <uses-permission android:name="io.github.okiele.users.PERMISSION_SINGLE_USER" />
 
     <application
         android:allowBackup="true"
@@ -20,6 +30,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".SingleUserService"
+            android:enabled="true"
+            android:exported="true"
+            android:singleUser="true"
+            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER">
+            <intent-filter>
+                <action android:name="io.github.okiele.users.SINGLE_USER" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
