@@ -19,10 +19,20 @@ android {
         }
     }
 
+    signingConfigs {
+        create("platform") {
+            storeFile = file("${rootDir}/platform.jks")
+            storePassword = "123456"
+            keyPassword = "123456"
+            keyAlias = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("platform")
         }
     }
     compileOptions {
@@ -46,7 +56,7 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":platform-libs"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
