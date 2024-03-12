@@ -9,9 +9,19 @@ import android.os.IBinder
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,20 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.MutableLiveData
 import io.github.okiele.users.ui.theme.MultipleUsersTheme
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
-    private val userGetter = {
-        applicationContext.getUser().getIdentifier()
-    }
-    private val sameUserData = MutableLiveData(true)
+    private val viewModel: MainViewModel by viewModels()
+    private var singleUserBinder: ISingleUser? = null
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             Log.i(TAG, "onServiceConnected $service")
-            sameUserData.postValue(ISingleUser.Stub.asInterface(service)?.get(userGetter()) != false)
+            singleUserBinder = ISingleUser.Stub.asInterface(service)
+            viewModel.setSameUser(singleUserBinder?.get(viewModel.currentUser) != false)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -50,11 +59,27 @@ class MainActivity : ComponentActivity() {
             connection, Context.BIND_AUTO_CREATE
         )
         setContent {
-            val isSameUser = sameUserData.observeAsState()
+            val isSameUser = viewModel.getSameUser().observeAsState()
+            val settings = viewModel.getSettings().observeAsState()
             MultipleUsersTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Content(Modifier.fillMaxSize(), userGetter = userGetter, isSameUser = isSameUser.value ?: true)
+                    Content(
+                        modifier = Modifier.fillMaxSize(),
+                        currentUser = viewModel.currentUser,
+                        isSameUser = isSameUser.value ?: true,
+                        settings = settings.value.orEmpty(),
+                        addSettings = { sameUser ->
+                            val current = System.currentTimeMillis()
+                            val secondInHour = current / TimeUnit.SECONDS.toMillis(1) % TimeUnit.HOURS.toSeconds(1)
+                            Log.d(TAG, "Inserting $secondInHour $current")
+                            if (sameUser) {
+                                viewModel.sendSettings(singleUserBinder, secondInHour.toString(), current.toString())
+                            } else {
+                                viewModel.putSettings(secondInHour.toString(), current.toString())
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -73,13 +98,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Content(modifier: Modifier = Modifier, userGetter: () -> Int, isSameUser: Boolean = true) {
+fun Content(
+    modifier: Modifier = Modifier,
+    currentUser: Int,
+    isSameUser: Boolean = true,
+    settings: List<String> = emptyList(),
+    addSettings: (Boolean) -> Unit = {}
+) {
     Column(modifier = modifier) {
         Text(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(vertical = 8.dp),
-            text = "Application Current User: ${userGetter()}",
+            text = "Application Current User: $currentUser",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = MaterialTheme.colorScheme.primary
@@ -95,6 +126,49 @@ fun Content(modifier: Modifier = Modifier, userGetter: () -> Int, isSameUser: Bo
                 color = MaterialTheme.colorScheme.secondary
             )
         )
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        )
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(vertical = 8.dp)
+        ) {
+            Button(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(vertical = 8.dp),
+                onClick = { addSettings(false) }
+            ) {
+                Text(text = "Add Settings(ContentResolver)")
+            }
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .width(32.dp)
+            )
+            Button(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(vertical = 8.dp),
+                onClick = { addSettings(true) }
+            ) {
+                Text(text = "Add Settings(AIDL -> Dao)")
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(settings) {
+                Text(text = it)
+            }
+        }
     }
 }
 
@@ -102,6 +176,6 @@ fun Content(modifier: Modifier = Modifier, userGetter: () -> Int, isSameUser: Bo
 @Composable
 fun GreetingPreview() {
     MultipleUsersTheme {
-        Content(Modifier.fillMaxSize(), userGetter = { 0 })
+        Content(Modifier.fillMaxSize(), currentUser = 0)
     }
 }
