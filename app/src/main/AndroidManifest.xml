@@ -41,6 +41,15 @@
                 <action android:name="io.github.okiele.users.SINGLE_USER" />
             </intent-filter>
         </service>
-    </application>
 
+        <provider
+            android:name=".SingleUserProvider"
+            android:authorities="io.github.okiele.users"
+            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER"
+            android:grantUriPermissions="true"
+            android:exported="true"
+            android:syncable="false"
+            android:multiprocess="false"
+            android:singleUser="true" />
+    </application>
 </manifest>
