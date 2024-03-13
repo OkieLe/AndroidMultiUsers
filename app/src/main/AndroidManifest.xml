@@ -9,7 +9,13 @@
     <permission
         android:name="io.github.okiele.users.PERMISSION_SINGLE_USER"
         android:protectionLevel="normal" />
+
     <uses-permission android:name="io.github.okiele.users.PERMISSION_SINGLE_USER" />
+
+    <queries>
+        <package android:name="io.github.okiele.users" />
+        <provider android:authorities="io.github.okiele.users" />
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -35,25 +41,35 @@
             android:name=".SingleUserService"
             android:enabled="true"
             android:exported="true"
-            android:singleUser="true"
-            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER">
+            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER"
+            android:singleUser="true">
             <intent-filter>
                 <action android:name="io.github.okiele.users.SINGLE_USER" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
 
         <provider
             android:name=".SingleUserProvider"
             android:authorities="io.github.okiele.users"
-            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER"
-            android:grantUriPermissions="true"
             android:exported="true"
-            android:syncable="false"
+            android:grantUriPermissions="true"
             android:multiprocess="false"
-            android:singleUser="true" />
+            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER"
+            android:singleUser="true"
+            android:syncable="false" />
+
+        <receiver
+            android:name=".SingleUserReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="io.github.okiele.users.PERMISSION_SINGLE_USER"
+            android:singleUser="true">
+            <intent-filter>
+                <action android:name="io.github.okiele.users.SINGLE_USER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
 
-    <queries>
-        <provider android:authorities="io.github.okiele.users" />
-    </queries>
 </manifest>

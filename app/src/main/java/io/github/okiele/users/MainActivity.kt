@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -78,6 +77,9 @@ class MainActivity : ComponentActivity() {
                             } else {
                                 viewModel.putSettings(secondInHour.toString(), current.toString())
                             }
+                        },
+                        broadcast = {
+                            SingleUserReceiver.broadcast(this, viewModel.currentUser)
                         }
                     )
                 }
@@ -103,42 +105,65 @@ fun Content(
     currentUser: Int,
     isSameUser: Boolean = true,
     settings: List<String> = emptyList(),
-    addSettings: (Boolean) -> Unit = {}
+    addSettings: (Boolean) -> Unit = {},
+    broadcast: () -> Unit = {}
 ) {
-    Column(modifier = modifier) {
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            text = "Application Current User: $currentUser",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.primary
+    Row(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(3f)) {
+            Text(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp),
+                text = "Application Current User: $currentUser",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.primary
+                )
             )
-        )
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            text = "Same User of Single User Service: $isSameUser",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.secondary
+            Text(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp),
+                text = "Same User of Single User Service: $isSameUser",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.secondary
+                )
             )
-        )
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        )
-        Row(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp)
-        ) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                items(settings) {
+                    Text(text = it)
+                }
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
             Button(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp),
+                onClick = broadcast
+            ) {
+                Text(text = "Send Broadcast")
+            }
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+            )
+            Button(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
                     .padding(vertical = 8.dp),
                 onClick = { addSettings(false) }
             ) {
@@ -146,27 +171,16 @@ fun Content(
             }
             Spacer(
                 modifier = Modifier
-                    .height(8.dp)
-                    .width(32.dp)
+                    .fillMaxWidth()
+                    .height(24.dp)
             )
             Button(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterHorizontally)
                     .padding(vertical = 8.dp),
                 onClick = { addSettings(true) }
             ) {
-                Text(text = "Add Settings(AIDL -> Dao)")
-            }
-        }
-        LazyColumn(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            items(settings) {
-                Text(text = it)
+                Text(text = "Add Settings(AIDL -> DAO)")
             }
         }
     }
