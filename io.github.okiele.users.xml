@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<permissions>
+    <privapp-permissions package="io.github.okiele.users">
+        <permission name="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+        <permission name="io.github.okiele.users.PERMISSION_SINGLE_USER"/>
+    </privapp-permissions>
+</permissions>
